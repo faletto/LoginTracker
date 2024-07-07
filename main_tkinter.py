@@ -119,16 +119,24 @@ def single_upload(log_type, cell_value, input_id):
 
 # Function to upload data to the spreadsheet
 def upload_data(log_type):
+    # Gets time of upload
     start_time = time.time()
+
+    # Gets current value of student ID
     ID_label.config(text=None)
     input_id = entry.get()
+
+    # Ends script if ID value is empty
     if not input_id:
         return
 
+    # Finds the cell associated with that student ID
     person_cell = ID_sheet.find(input_id)
     if not input_id.isnumeric() or person_cell is None:
         add_simple_warning("Invalid ID")
+
     else:
+        
         vital_info = ID_sheet.batch_get(
             [f"B{person_cell.row}:D{person_cell.row}", "G1", "I1"]
         )
