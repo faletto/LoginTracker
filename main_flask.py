@@ -19,7 +19,7 @@ usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
 if not Path(usb_drive_path).is_dir():
     print(f"WARNING - No USB Drive Found at {usb_drive_path}")
-    usb_drive_path = "~/Desktop/VirtualDrive"
+    usb_drive_path = os.path.expanduser("~").replace("\\","/") +  "/Desktop/VirtualDrive"
     if not os.path.exists(usb_drive_path):
         os.mkdir(usb_drive_path)
     print(f"Using {usb_drive_path} instead")
