@@ -115,6 +115,7 @@ def single_upload(log_type, cell_value, input_id):
     )
 
 
+
 # Function to upload data to the spreadsheet
 @app.route("/upload",methods=["POST"])
 def upload():
@@ -197,14 +198,17 @@ def upload():
             else:
                 single_upload(log_type, cell_value, input_id)
                 success_message = f"{log_type} {person_namestatus[0]}"
-
+            camera_path = f"\'{usb_drive_path}/{person_namestatus[0]}-{datetime.datetime.now().strftime('%Y-%m-%d %H%M%S')}-{log_type}" + ".jpeg\'"
             os.system(
-                f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg"""
+                f"""fswebcam -r 320x240 --no-banner {camera_path}"""
             )  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams#setting-up-and-using-a-usb-webcam
+            
+            # Copies most recent picture to a location where flask can read it
+            os.system(f"""cp {camera_path} static/images/last_login.jpeg""")
             write_to_log(
                 f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
             )
-    last_login = f'{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}' + ".jpeg"
-    return flask.render_template("index.html",message=success_message,last_login=last_login)
+    
+    return flask.render_template("index.html",message=success_message,last_login=flask.url_for("static",filename="images/last_login.jpeg"))
 
 app.run(debug=True)
