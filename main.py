@@ -17,9 +17,12 @@ cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 usb_drive_name = "LoginLogger"
 usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
+# If no USB drive (matching usb_drive_name) is plugged in
 if not Path(usb_drive_path).is_dir():
     print(f"WARNING - No USB Drive Found at {usb_drive_path}")
+    # Creates a virtual "drive" at /home/(username)/Desktop/VirtualDrive
     usb_drive_path = os.path.expanduser("~").replace("\\","/") +  "/Desktop/VirtualDrive"
+    # Ensures virtual drive folder exists
     if not os.path.exists(usb_drive_path):
         os.mkdir(usb_drive_path)
     print(f"Using {usb_drive_path} instead")
