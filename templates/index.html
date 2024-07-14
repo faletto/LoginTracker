@@ -9,11 +9,11 @@
     <h1>Welcome to NRG Login System</h1>
     <form action="/upload" method="POST">
         <input type="text" name="input_id" placeholder="Student ID">
-        <button type="submit" name="button" value="login">Log In</button>
-        <button type="submit" name="button" value="logout">Log Out</button>
-        <button type="submit" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
+        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="login">Log In</button>
+        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logout">Log Out</button>
+        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
     </form>
     <p>{{ message }}</p>
-    <img src="/static/images/last_login.jpeg"></img>
+    <img src="/static/last_login.jpeg"></img>
 </body>
 </html>

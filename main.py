@@ -207,11 +207,11 @@ def upload():
             )  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams#setting-up-and-using-a-usb-webcam
             
             # Copies most recent picture to a location where flask can read it
-            os.system(f"""cp {camera_path} static/images/last_login.jpeg""")
+            os.system(f"""cp {camera_path} static/last_login.jpeg""")
             write_to_log(
                 f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
             )
     
-    return flask.render_template("index.html",message=success_message,last_login=flask.url_for("static",filename="images/last_login.jpeg"))
+    return flask.render_template("index.html",message=success_message,last_login=flask.url_for("static",filename="last_login.jpeg"))
 
 app.run(debug=True)
