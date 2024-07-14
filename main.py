@@ -11,9 +11,9 @@ from pathlib import Path
 from threading import Thread
 
 # CWD - current working directory
-# Backslashes are replaced by forward slashes because tkinter is stupid
 cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 
+# TODO - add config file for this
 usb_drive_name = "LoginLogger"
 usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
@@ -27,6 +27,7 @@ if not Path(usb_drive_path).is_dir():
         os.mkdir(usb_drive_path)
     print(f"Using {usb_drive_path} instead")
 
+### Various functions that taiga wrote
 
 def write_to_log(text):
     if Path(usb_drive_path).is_dir():
@@ -53,6 +54,14 @@ def quit():
     time.sleep(0.5)
     sys.exit()
 
+
+# Cleans up last login picture from previous session
+if os.path.exists(f"{cwd}/static/last_login.jpeg"):
+    os.remove(f"{cwd}/static/last_login.jpeg")
+
+# Fixes weird git quirk where you can't have an empty folder sync
+try: os.mkdir(f"{cwd}/static") 
+except: pass
 
 # check if there's a not-empty spreadsheet_url.txt file. Does not check for validity.
 url_file_path = f"{cwd}/spreadsheet_url.txt"
