@@ -2,3 +2,4 @@ spreadsheet_url.txt
 *.json
 logs.txt
 .venv
+static/last_login.jpeg
