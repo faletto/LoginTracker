@@ -41,7 +41,7 @@ def write_to_log(text):
 # A warning will simply end the function, while keeping the web server online
 def add_simple_warning(warn_type):
     write_to_log(f"WARNING - {warn_type}, skipping...")
-    return flask.render_template("index.html", message=warn_type)
+    return flask.render_template("index.html", message=warn_type,show_last_login=False)
 
 # An error will shut down the web server
 def add_simple_error(error_type, instructions):
@@ -98,7 +98,7 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def index():
-    return flask.render_template("index.html",message="Server Restarted.")
+    return flask.render_template("index.html",message="Server Restarted.",show_last_login=False)
 
 # Authenticate with Google Sheets
 gc = gspread.service_account(filename=service_account_file_path)
@@ -221,6 +221,6 @@ def upload():
                 f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
             )
     
-    return flask.render_template("index.html",message=success_message,last_login=flask.url_for("static",filename="last_login.jpeg"))
+    return flask.render_template("index.html",message=success_message,show_last_login=True)
 
 app.run(debug=True)

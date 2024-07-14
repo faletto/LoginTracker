@@ -14,6 +14,8 @@
         <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
     </form>
     <p>{{ message }}</p>
-    <img src="/static/last_login.jpeg"></img>
+    {% if message != "Server Restarted." %}
+        <img src="/static/last_login.jpeg"></img>
+    {% endif %}
 </body>
 </html>
