@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NRG Login System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/index.css">
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
 </head>
 <body>
-    <h1>Welcome to NRG Login System</h1>
-    <form action="/upload" method="POST">
+    <h1>Welcome to <span class="title">LOGI<span class="accent">NRG</span></span></h1>
+    <form action="/upload" method="POST"> 
         <input type="text" name="input_id" placeholder="Student ID">
-        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="login">Log In</button>
-        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logout">Log Out</button>
-        <button type="submit" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
+        <div><button type="submit" class="login" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="login">Log In</button>
+        <button type="submit" class="logout" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logout">Log Out</button></div>
+        <button type="submit" class="logoutall" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
     </form>
     <p>{{ message }}</p>
-    {% if message != "Server Restarted." %}
+    {% if show_last_login %}
         <img src="/static/last_login.jpeg"></img>
     {% endif %}
 </body>
