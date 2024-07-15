@@ -59,9 +59,6 @@ def quit():
 if os.path.exists(f"{cwd}/static/last_login.jpeg"):
     os.remove(f"{cwd}/static/last_login.jpeg")
 
-# Fixes weird git quirk where you can't have an empty folder sync
-try: os.mkdir(f"{cwd}/static") 
-except: pass
 
 # check if there's a not-empty spreadsheet_url.txt file. Does not check for validity.
 url_file_path = f"{cwd}/spreadsheet_url.txt"
