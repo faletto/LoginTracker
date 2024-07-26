@@ -1,5 +1,3 @@
-import tkinter as tk
-from tkinter import ttk, PhotoImage
 import gspread
 import datetime
 import socket
