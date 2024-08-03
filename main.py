@@ -30,7 +30,7 @@ if not Path(usb_drive_path).is_dir():
 def write_to_log(text):
     if Path(usb_drive_path).is_dir():
         os.system(
-            f"""echo '{datetime.datetime.now()}  {text}' >> '{usb_drive_path}'/logs.txt"""
+            f"""echo "{datetime.datetime.now()}  {text}" >> "{usb_drive_path}"/logs.txt"""
         )
     else:
         print(f"{datetime.datetime.now()}  {text}")
@@ -106,21 +106,11 @@ ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
 
 
 def single_upload(log_type, cell_value, input_id):
-    worksheet.batch_update(
-        [
-            {
-                "range": f"A{cell_value}:C{cell_value}",
-                "values": [
-                    [
-                        int(input_id),
-                        datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
-                        log_type,
-                    ]
-                ],
-            }
-        ]
+    worksheet.update(
+        [[input_id, datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), log_type]],
+        f"A{cell_value}:C{cell_value}",
+        "USER_ENTERED",
     )
-
 
 
 # Function to upload data to the spreadsheet
@@ -132,18 +122,19 @@ def upload():
     
     # Gets current value of student ID
     input_id = flask.request.form["input_id"]
-    print(input_id)
 
     # Ends script if ID value is empty
     if not input_id:
         return add_simple_warning("Student ID field is empty")
+    if not input_id.isnumeric:
+        return add_simple_warning("Invalid ID")
 
     # Gets log type
     log_type = flask.request.form["button"]
 
     # Finds the cell associated with that student ID
     person_cell = ID_sheet.find(input_id)
-    if not input_id.isnumeric() or person_cell is None:
+    if person_cell is None:
         return add_simple_warning("Invalid ID")
 
     else:
@@ -164,7 +155,8 @@ def upload():
                             None,
                             None,
                             None,
-                            f'=IFERROR(IF(C{cell_value+i}="logout",B{cell_value+i} - INDEX(B$2:B{cell_value-1+i}, MAX(IF((A$2:A{cell_value-1+i}=A{cell_value+i})*(C$2:C{cell_value-1+i}="login"), ROW(A$2:A{cell_value-1+i})-ROW(A$2)+1))),))',
+                            f'IF(C{cell_value+i}="logout",B{cell_value+i}-INDEX(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}), COUNT(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}))),)',
+                            f"""=IFERROR(VLOOKUP(A{cell_value+i},'[BACKEND] ID List'!A:B,2,FALSE))""",
                         ]
                         for i in range(200)
                     ],
@@ -196,7 +188,7 @@ def upload():
                     ] * len(logged_in_IDs_flat)
                     worksheet.update(
                         batchlogoutdate,
-                        f"B{cell_value}:C{cell_value + len(logged_in_IDs_flat) - 1}",
+                        f"B{cell_value}:C{cell_value + len(logged_in_IDs_flat) - 1}","USER_ENTERED"
                     )
                     success_message = f"Goodnight, {person_namestatus[0]}!"
                     write_to_log(f"Logged out {len(logged_in_IDs_flat)} users")

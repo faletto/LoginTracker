@@ -29,7 +29,7 @@ if not Path(usb_drive_path).is_dir():
 
 def write_to_log(text):
     os.system(
-        f"""echo '{datetime.datetime.now()}  {text}' >> '{usb_drive_path}'/logs.txt"""
+        f"""echo "{datetime.datetime.now()}  {text}" >> "{usb_drive_path}"/logs.txt"""
     )
 
 
@@ -232,6 +232,6 @@ ID_label.pack()
 
 # Start the Tkinter main loop
 write_to_log(
-    f"Initialzation complete in {time.time() - start_time} seconds, launching GUI..."
+    f"Initialzation completed in {time.time() - start_time} seconds, launching GUI..."
 )
 window.mainloop()
