@@ -89,10 +89,12 @@ except:
 worksheet = spreadsheet.worksheet("[BACKEND] Logs")
 ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
 
+ID_list = ID_sheet.col_values(1)
 
-def single_upload(log_type, cell_value, input_id):
+
+def single_upload(log_type, cell_value, input_id, timestamp):
     worksheet.update(
-        [[input_id, datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"), log_type]],
+        [[input_id, timestamp, log_type]],
         f"A{cell_value}:C{cell_value}",
         "USER_ENTERED",
     )
@@ -100,86 +102,93 @@ def single_upload(log_type, cell_value, input_id):
 
 # Function to upload data to the spreadsheet
 def upload_data(log_type):
+    global ID_list
     start_time = time.time()
     input_id = entry.get()
     entry.delete(0, tk.END)
+    upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working...")
-    if not input_id.isnumeric():
+    if not input_id.isnumeric() or not 100000 <= int(input_id) <= 9999999:
         if not input_id:
             ID_label.config(text="")
             return
         add_simple_warning("Invalid ID")
-    person_cell = ID_sheet.find(input_id)
-    if person_cell is None:
-        add_simple_warning("Invalid ID")
-    else:
-        vital_info = ID_sheet.batch_get(
-            [f"B{person_cell.row}:D{person_cell.row}", "G1", "I1"]
-        )
-        cell_value = int(vital_info[1][0][0])
-        enough_rows = vital_info[2][0][0]
-        person_namestatus = vital_info[0][0]
-        if person_namestatus[1] == log_type and not log_type == "logoutall":
-            add_simple_warning("Already Done")
-        else:
-            if enough_rows == "FALSE":
-                worksheet.append_rows(
-                    [
-                        [
-                            None,
-                            None,
-                            f'=IF(C{cell_value+i}="logout",B{cell_value+i}-INDEX(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}), COUNT(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}))),)',
-                            f"""=IFERROR(VLOOKUP(A{cell_value+i},'[BACKEND] ID List'!A:B,2,FALSE))""",
-                        ]
-                        for i in range(200)
-                    ],
-                    "USER_ENTERED",
-                )
-                write_to_log("Appended 200 new rows")
-            if log_type == "logoutall" and person_namestatus[2] == "TRUE":
-                logged_in_cells = ID_sheet.findall("login", None, 3)
-                if logged_in_cells == []:
-                    add_simple_warning("Everyone's already logged out!")
-                    return
-                else:
-                    logged_in_IDs_nested = ID_sheet.batch_get(
-                        [f"A{x.row}" for x in logged_in_cells]
-                    )
-                    logged_in_IDs_flat = [
-                        [int(inner_list[0][0])] for inner_list in logged_in_IDs_nested
-                    ]
-                    single_upload("logoutall", cell_value, input_id)
-                    cell_value += 1
-                    worksheet.update(
-                        logged_in_IDs_flat,
-                        f"A{cell_value}:A{cell_value + len(logged_in_IDs_flat) - 1}",
-                    )
-                    batchlogoutdate = [
-                        [
-                            f"=B{cell_value-1}",
-                            "logout",
-                        ]
-                    ] * len(logged_in_IDs_flat)
-                    worksheet.update(
-                        batchlogoutdate,
-                        f"B{cell_value}:C{cell_value + len(logged_in_IDs_flat) - 1}",
-                        "USER_ENTERED",
-                    )
-                    ID_label.config(text=f"Goodnight, {person_namestatus[0]}!")
-                    write_to_log(f"Logged out {len(logged_in_IDs_flat)} users")
-            elif log_type == "logoutall":
-                add_simple_warning(f"{person_namestatus[0]} can't log everyone out.")
-                return
-            else:
-                single_upload(log_type, cell_value, input_id)
-                ID_label.config(text=f"{log_type} {person_namestatus[0]}")
+        return
+    try:
+        ID_index = ID_list.index(input_id)
+    except ValueError:
+        ID_list = ID_sheet.col_values(1)
+        try:
+            ID_index = ID_list.index(input_id)
+        except ValueError:
+            add_simple_warning("ID Not Found!")
+            return
+        write_to_log("Found ID in Search")
 
-            os.system(
-                f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg"""
-            )  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
-            write_to_log(
-                f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
+    vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "G1", "I1"])
+    cell_value = int(vital_info[1][0][0])
+    enough_rows = vital_info[2][0][0]
+    person_namestatus = vital_info[0][0]
+    if person_namestatus[1] == log_type:
+        add_simple_warning("Already Done")
+        return
+    elif enough_rows == "FALSE":
+        worksheet.append_rows(
+            [
+                [
+                    None,
+                    None,
+                    f'=IF(C{cell_value+i}="logout",B{cell_value+i}-INDEX(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}), COUNT(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}))),)',
+                ]
+                for i in range(200)
+            ],
+            "USER_ENTERED",
+        )
+        write_to_log("Appended 200 new rows")
+    if log_type == "logoutall" and person_namestatus[2] == "TRUE":
+        logged_in_cells = ID_sheet.findall("login", None, 3)
+        if logged_in_cells == []:
+            add_simple_warning("Everyone's already logged out!")
+            return
+        else:
+            logged_in_IDs_nested = ID_sheet.batch_get(
+                [f"A{x.row}" for x in logged_in_cells]
             )
+            logged_in_IDs_flat = [
+                [int(inner_list[0][0])] for inner_list in logged_in_IDs_nested
+            ]
+            single_upload("logoutall", cell_value, input_id, upload_timestamp)
+            cell_value += 1
+            worksheet.update(
+                logged_in_IDs_flat,
+                f"A{cell_value}:A{cell_value + len(logged_in_IDs_flat) - 1}",
+            )
+            batchlogoutdate = [
+                [
+                    f"=B{cell_value-1}",
+                    "logout",
+                ]
+            ] * len(logged_in_IDs_flat)
+            worksheet.update(
+                batchlogoutdate,
+                f"B{cell_value}:C{cell_value + len(logged_in_IDs_flat) - 1}",
+                "USER_ENTERED",
+            )
+            ID_label.config(text=f"Goodnight, {person_namestatus[0]}!")
+            write_to_log(f"Logged out {len(logged_in_IDs_flat)} users")
+    elif log_type == "logoutall":
+        add_simple_warning(f"{person_namestatus[0]} can't log everyone out.")
+        return
+    else:
+        single_upload(log_type, cell_value, input_id, upload_timestamp)
+        ID_label.config(text=f"{log_type} {person_namestatus[0]}")
+
+    os.system(
+        f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg"""
+    )  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
+    write_to_log(
+        f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
+    )
 
 
 # Set style, and add images and static text
