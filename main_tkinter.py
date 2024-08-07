@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from threading import Thread
 
-usb_drive_name = "LoginLogger"
+usb_drive_name = "LoginLogger"  # TODO - add config file for this
 
 start_time = time.time()
 
@@ -16,8 +16,10 @@ start_time = time.time()
 cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
+# If no USB drive (matching usb_drive_name) is plugged in
 if not Path(usb_drive_path).is_dir():
     print(f"WARNING - No USB Drive Found at {usb_drive_path}")
+    # Creates a virtual "drive" at /home/(username)/Desktop/VirtualDrive
     usb_drive_path = (
         os.path.expanduser("~").replace("\\", "/") + "/Desktop/VirtualDrive"
     )
@@ -51,6 +53,9 @@ def add_simple_error(error_type, instructions):
 # Initialize the Tkinter window
 window = tk.Tk()
 window.title("NRG Login System")
+window.attributes("-fullscreen", True)
+window.focus_force()
+window.bind("<Escape>", lambda event: window.attributes("-fullscreen", False))
 
 # Authenticate with Google Sheets
 # https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
@@ -101,14 +106,16 @@ def single_upload(log_type, cell_value, input_id, timestamp):
 
 
 # Function to upload data to the spreadsheet
-def upload_data(log_type):
+def upload_data(log_type,delete_last_character=False):
     global ID_list
     start_time = time.time()
     input_id = entry.get()
     entry.delete(0, tk.END)
+    if delete_last_character:
+        input_id = input_id[:-1]
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working...")
-    if not input_id.isnumeric() or not 100000 <= int(input_id) <= 9999999:
+    if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
         if not input_id:
             ID_label.config(text="")
             return
@@ -116,11 +123,11 @@ def upload_data(log_type):
         return
     try:
         ID_index = ID_list.index(input_id)
-    except ValueError:
+    except:
         ID_list = ID_sheet.col_values(1)
         try:
             ID_index = ID_list.index(input_id)
-        except ValueError:
+        except:
             add_simple_warning("ID Not Found!")
             return
         write_to_log("Found ID in Search")
@@ -207,25 +214,29 @@ how_to_use_label = ttk.Label(window, text="Enter your Student ID:")
 how_to_use_label.pack()
 
 # Entry widget for user input
-entry = ttk.Entry(window, font=("helvetica", 32), justify="center", show="*")
+entry = ttk.Entry(window, font=("helvetica", 32), justify="center", show="•")
+entry.focus_set()
+entry.bind("/",lambda event: Thread(target=upload_data, args=("login",True)).start()) # fmt: skip
+entry.bind("*",lambda event: Thread(target=upload_data, args=("logout",True)).start()) # fmt: skip
+entry.bind("-",lambda event: Thread(target=upload_data, args=("logoutall",True)).start()) # fmt: skip
 entry.pack()
 
 # Buttons for login, logout, and logout all
 button_login = ttk.Button(
     window,
-    text="Login",
+    text="Login (/)",
     width=25,
     command=lambda: Thread(target=upload_data, args=("login",)).start(),
 )
 button_logout = ttk.Button(
     window,
-    text="Logout",
+    text="Logout (*)",
     width=25,
     command=lambda: Thread(target=upload_data, args=("logout",)).start(),
 )
 button_logout_all = ttk.Button(
     window,
-    text="Logout All",
+    text="Logout All (-)",
     width=25,
     command=lambda: Thread(target=upload_data, args=("logoutall",)).start(),
 )
