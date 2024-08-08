@@ -106,7 +106,7 @@ def single_upload(log_type, cell_value, input_id, timestamp):
 
 
 # Function to upload data to the spreadsheet
-def upload_data(log_type,delete_last_character=False):
+def upload_data(log_type, delete_last_character=False):
     global ID_list
     start_time = time.time()
     input_id = entry.get()
@@ -152,6 +152,14 @@ def upload_data(log_type,delete_last_character=False):
             "USER_ENTERED",
         )
         write_to_log("Appended 200 new rows")
+
+    Thread(
+        target=os.system,
+        args=(
+            f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg""",
+        ),
+    ).start()  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
+
     if log_type == "logoutall" and person_namestatus[2] == "TRUE":
         logged_in_cells = ID_sheet.findall("login", None, 3)
         if logged_in_cells == []:
@@ -190,9 +198,6 @@ def upload_data(log_type,delete_last_character=False):
         single_upload(log_type, cell_value, input_id, upload_timestamp)
         ID_label.config(text=f"{log_type} {person_namestatus[0]}")
 
-    os.system(
-        f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg"""
-    )  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
     write_to_log(
         f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
     )
@@ -216,9 +221,9 @@ how_to_use_label.pack()
 # Entry widget for user input
 entry = ttk.Entry(window, font=("helvetica", 32), justify="center", show="•")
 entry.focus_set()
-entry.bind("/",lambda event: Thread(target=upload_data, args=("login",True)).start()) # fmt: skip
-entry.bind("*",lambda event: Thread(target=upload_data, args=("logout",True)).start()) # fmt: skip
-entry.bind("-",lambda event: Thread(target=upload_data, args=("logoutall",True)).start()) # fmt: skip
+entry.bind("/",lambda event: Thread(target=upload_data, args=("login",True)).start())  # fmt: skip
+entry.bind("*",lambda event: Thread(target=upload_data, args=("logout",True)).start())  # fmt: skip
+entry.bind("-",lambda event: Thread(target=upload_data, args=("logoutall",True)).start())  # fmt: skip
 entry.pack()
 
 # Buttons for login, logout, and logout all
