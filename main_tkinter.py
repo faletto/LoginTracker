@@ -37,6 +37,7 @@ def write_to_log(text):
 
 def add_simple_warning(warn_type):
     write_to_log(f"WARNING - {warn_type}, skipping...")
+    ID_label.config(fg="orange")
     ID_label.config(text=warn_type)
 
 
@@ -114,6 +115,7 @@ def upload_data(log_type, delete_last_character=False):
     if delete_last_character:
         input_id = input_id[:-1]
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    ID_label.config(fg="black")
     ID_label.config(text="Working...")
     if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
         if not input_id:
@@ -197,7 +199,7 @@ def upload_data(log_type, delete_last_character=False):
     else:
         single_upload(log_type, cell_value, input_id, upload_timestamp)
         ID_label.config(text=f"{log_type} {person_namestatus[0]}")
-
+    ID_label.config(fg="green")
     write_to_log(
         f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
     )
@@ -251,7 +253,7 @@ button_logout.pack()
 button_logout_all.pack()
 
 # Label for displaying messages
-ID_label = ttk.Label(window)
+ID_label = tk.Label(window, font=("Helvetica", 32))
 ID_label.pack()
 
 # Start the Tkinter main loop
