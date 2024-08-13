@@ -14,9 +14,9 @@
     <h1>Welcome to <span class="title">LOGI<span class="accent">NRG</span></span></h1>
     <form action="/upload" method="POST"> 
         <input type="text" name="input_id" placeholder="Student ID">
-        <div><button type="submit" class="login" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="login">Log In</button>
-        <button type="submit" class="logout" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logout">Log Out</button></div>
-        <button type="submit" class="logoutall" onclick="alert('Your picture will now be taken. Say cheese!')" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
+        <div><button type="submit" class="login" name="button" value="login">Log In</button>
+        <button type="submit" class="logout" name="button" value="logout">Log Out</button></div>
+        <button type="submit" class="logoutall" name="button" value="logoutall">Log All Users Out (for leadership only)</button>
     </form>
     <p>{{ message }}</p>
     {% if show_last_login %}

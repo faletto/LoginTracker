@@ -8,11 +8,10 @@ import flask
 from pathlib import Path
 from threading import Thread
 
-# CWD - current working directory
-cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
+usb_drive_name = "LoginLogger"  # TODO - add config file for this
 
-# TODO - add config file for this
-usb_drive_name = "LoginLogger"
+# CWD - current working directory, with backslashes replaced by forward slashes
+cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
 usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
 # If no USB drive (matching usb_drive_name) is plugged in
@@ -27,16 +26,11 @@ if not Path(usb_drive_path).is_dir():
         os.mkdir(usb_drive_path)
     print(f"Using {usb_drive_path} instead")
 
-### Various functions that taiga wrote
-
 
 def write_to_log(text):
-    if Path(usb_drive_path).is_dir():
-        os.system(
-            f"""echo "{datetime.datetime.now()}  {text}" >> "{usb_drive_path}"/logs.txt"""
-        )
-    else:
-        print(f"{datetime.datetime.now()}  {text}")
+    os.system(
+        f"""echo "{datetime.datetime.now()}  {text}" >> "{usb_drive_path}"/logs.txt"""
+    )
 
 
 # A warning will simply end the function, while keeping the web server online
@@ -60,43 +54,46 @@ def quit():
     sys.exit()
 
 
-# Cleans up last login picture from previous session
-if os.path.exists(f"{cwd}/static/last_login.jpeg"):
-    os.remove(f"{cwd}/static/last_login.jpeg")
+# Authenticate with Google Sheets
+# https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
+service_account_file_path = f"{cwd}/service_account.json"
+try:
+    gc = gspread.service_account(filename=service_account_file_path)
+except:
+    add_simple_error("No service_account.json", "Please add a service_account.json")
 
+try:
+    socket.create_connection(("www.google.com", 80), timeout=3)
+except:
+    add_simple_error("No internet", "No internet. Please connect to internet")
 
-# check if there's a not-empty spreadsheet_url.txt file. Does not check for validity.
 url_file_path = f"{cwd}/spreadsheet_url.txt"
 try:
-    if os.path.getsize(url_file_path) == 0:
-        add_simple_error(
-            "Empty URL File", "Please paste spreadsheet URL into spreadsheet_url.txt"
-        )
     with open(url_file_path) as f:
         spreadsheet_url = f.readline()
-except:
+    write_to_log(f"Opening spreadsheet: {spreadsheet_url}")
+    spreadsheet = gc.open_by_url(spreadsheet_url)
+except FileNotFoundError:
     with open(url_file_path, "w") as f:
         f.write("")
     add_simple_error(
         "No URL File, Creating...",
         "Please paste spreadsheet URL into the new spreadsheet_url.txt",
     )
+except gspread.exceptions.NoValidUrlKeyFound:
+    add_simple_error(
+        "Invalid or Empty URL File",
+        "Please paste spreadsheet URL into spreadsheet_url.txt",
+    )
+except:
+    add_simple_error("Unknown Error", "Unknown Error. Please")
 
-# Check internet connection
-try:
-    socket.setdefaulttimeout(3)
-    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
-except socket.error:
-    add_simple_error("No internet", "No Internet. Please reconnect")
+worksheet = spreadsheet.worksheet("[BACKEND] Logs")
+ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
 
-# Check for service account credentials
-# https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
-service_account_file_path = f"{cwd}/service_account.json"
-if not Path(service_account_file_path).is_file():
-    add_simple_error("No service_account.json", "Please add a service_account.json")
+ID_list = ID_sheet.col_values(1)
 
 app = flask.Flask(__name__)
-
 
 @app.route("/")
 def index():
@@ -104,14 +101,6 @@ def index():
 
 # Authenticate with Google Sheets
 gc = gspread.service_account(filename=service_account_file_path)
-
-write_to_log(f"Opening spreadsheet: {spreadsheet_url}")
-spreadsheet = gc.open_by_url(spreadsheet_url)
-
-worksheet = spreadsheet.worksheet("[BACKEND] Logs")
-ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
-ID_list = ID_sheet.col_values(1)
-
 
 def single_upload(log_type, cell_value, input_id):
     worksheet.update(
