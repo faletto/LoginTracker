@@ -58,18 +58,14 @@ window.attributes("-fullscreen", True)
 window.focus_force()
 window.bind("<Escape>", lambda event: window.attributes("-fullscreen", False))
 
-# Authenticate with Google Sheets
-# https://docs.gspread.org/en/latest/oauth2.html#for-bots-using-service-account
-service_account_file_path = f"{cwd}/service_account.json"
-try:
-    gc = gspread.service_account(filename=service_account_file_path)
-except:
-    add_simple_error("No service_account.json", "Please add a service_account.json")
-
 try:
     socket.create_connection(("www.google.com", 80), timeout=3)
 except:
     add_simple_error("No internet", "No internet. Please connect to internet")
+
+# Authenticate with Google Sheets
+# https://docs.gspread.org/en/latest/oauth2.html#for-end-users-using-oauth-client-id
+gc = gspread.oauth(credentials_filename=f"{cwd}/credentials.json")
 
 url_file_path = f"{cwd}/spreadsheet_url.txt"
 try:

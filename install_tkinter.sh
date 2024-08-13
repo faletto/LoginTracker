@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo apt update
+sudo apt remove -y lynx
 sudo apt install -y fswebcam python3 python3-tk python3-pip guvcview
 sudo git clone https://github.com/cj-plusplus/LoginTracker /usr/local/bin/LoginTracker
 sudo chmod -R a+rw /usr/local/bin/LoginTracker
