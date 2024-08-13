@@ -95,8 +95,6 @@ service_account_file_path = f"{cwd}/service_account.json"
 if not Path(service_account_file_path).is_file():
     add_simple_error("No service_account.json", "Please add a service_account.json")
 
-ID_list = ID_sheet.col_values(1)
-
 app = flask.Flask(__name__)
 
 
@@ -112,6 +110,7 @@ spreadsheet = gc.open_by_url(spreadsheet_url)
 
 worksheet = spreadsheet.worksheet("[BACKEND] Logs")
 ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
+ID_list = ID_sheet.col_values(1)
 
 
 def single_upload(log_type, cell_value, input_id):
