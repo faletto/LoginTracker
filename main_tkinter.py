@@ -54,9 +54,6 @@ def add_simple_error(error_type, instructions):
 # Initialize the Tkinter window
 window = tk.Tk()
 window.title("NRG Login System")
-window.attributes("-fullscreen", True)
-window.focus_force()
-window.bind("<Escape>", lambda event: window.attributes("-fullscreen", False))
 
 try:
     socket.create_connection(("www.google.com", 80), timeout=3)
@@ -84,6 +81,11 @@ except gspread.exceptions.NoValidUrlKeyFound:
     add_simple_error(
         "Invalid or Empty URL File",
         "Please paste spreadsheet URL into spreadsheet_url.txt",
+    )
+except PermissionError:
+    add_simple_error(
+        "Email not allowed to access spreadsheet",
+        "This email doesn't have permission for this spreadsheet. Please fix this,",
     )
 except:
     add_simple_error("Unknown Error", "Unknown Error. Please")
@@ -211,6 +213,9 @@ except:
     write_to_log("WARNING - No Logo Image Found")
 
 
+window.attributes("-fullscreen", True)
+window.focus_force()
+window.bind("<Escape>", lambda event: window.attributes("-fullscreen", False))
 s = ttk.Style()
 s.configure(".", font=("Helvetica", 32))
 how_to_use_label = ttk.Label(window, text="Enter your Student ID:")

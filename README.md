@@ -14,6 +14,6 @@ I recommend doing the following before installing:
 
 On first startup, the app will open a web browser (Chrome recommended) and ask you to give Oauth permissions. As stated before, I recommend using a new account for this. Allow it to access as needed.
 
-To use a different account, delete the authorized_user.json file in ```~/.config/gspread/credentials.json``` (```%APPDATA%\gspread\credentials.json``` for Windows)
+To use a different account, delete the authorized_user.json file in ```~/.config/gspread/credentials.json```
 
 Small portions of the Python were done by ChatGPT. I (@TaigaM123) am not sure how much time or effort it saved though.
