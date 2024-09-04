@@ -11,6 +11,7 @@ echo "creating venv..."
 python3 -m venv /usr/local/bin/LoginTracker/.venv
 source /usr/local/bin/LoginTracker/.venv/bin/activate
 pip install gspread
+pip install opencv-python
 
 #set up autolaunch then launch the program
 echo -e "[Desktop Entry]\nName=LoggyTracker\nExec=/usr/local/bin/LoginTracker/.venv/bin/python3 /usr/local/bin/LoginTracker/main_tkinter.py" | sudo tee /etc/xdg/autostart/LoggyTracker.desktop
