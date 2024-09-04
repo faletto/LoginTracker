@@ -137,7 +137,7 @@ def upload_data(log_type, delete_last_character=False):
             return
         write_to_log("Found ID in Search")
 
-    vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "G1", "I1"])
+    vital_info = ID_sheet.batch_get([f"C{ID_index+1}:E{ID_index+1}", "I1", "K1"])
     cell_value = int(vital_info[1][0][0])
     enough_rows = vital_info[2][0][0]
     person_namestatus = vital_info[0][0]
