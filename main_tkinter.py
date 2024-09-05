@@ -98,7 +98,7 @@ except:
 worksheet = spreadsheet.worksheet("[BACKEND] Logs")
 ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
 
-ID_list = ID_sheet.col_values(1)
+ID_list = ID_sheet.col_values(2)
 
 
 def single_upload(log_type, cell_value, input_id, timestamp):
@@ -129,7 +129,7 @@ def upload_data(log_type, delete_last_character=False):
     try:
         ID_index = ID_list.index(input_id)
     except:
-        ID_list = ID_sheet.col_values(1)
+        ID_list = ID_sheet.col_values(2)
         try:
             ID_index = ID_list.index(input_id)
         except:
