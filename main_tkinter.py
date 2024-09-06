@@ -158,21 +158,21 @@ def upload_data(log_type, delete_last_character=False):
         )
         write_to_log("Appended 200 new rows")
 
-    #Thread(
+    # Thread(
     #    target=os.system,
     #    args=(
     #        f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg""",
     #    ),
-    #).start()  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
+    # ).start()  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
     Thread(
-        target=cv2.imwrite, 
+        target=cv2.imwrite,
         args=(
             f"""{usb_drive_path}/{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}.jpeg""",
-            cv2.VideoCapture(0).read()[1]
-        ) # Uses the OpenCV library to make the webcam work on Windows/Mac/Linux
+            cv2.VideoCapture(0).read()[1],
+        ),  # Uses the OpenCV library to make the webcam work on Windows/Mac/Linux
     ).start()
     if log_type == "logoutall" and person_namestatus[2] == "TRUE":
-        logged_in_cells = ID_sheet.findall("login", None, 3)
+        logged_in_cells = ID_sheet.findall("login", None, 4)
         if logged_in_cells == []:
             add_simple_warning("Everyone's already logged out!")
             return
