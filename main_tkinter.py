@@ -98,15 +98,18 @@ except:
 worksheet = spreadsheet.worksheet("[BACKEND] Logs")
 ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
 
-ID_list = ID_sheet.col_values(2)
+ID_list = ID_sheet.col_values(1)
 
 
 def single_upload(log_type, cell_value, input_id, timestamp):
-    worksheet.update(
-        [[input_id, timestamp, log_type]],
-        f"A{cell_value}:C{cell_value}",
-        "USER_ENTERED",
-    )
+    try:
+        worksheet.update(
+            [[input_id, timestamp, log_type]],
+            f"A{cell_value}:C{cell_value}",
+            "USER_ENTERED",
+        )
+    except:
+        add_simple_warning("Error @ line 106")
 
 
 # Function to upload data to the spreadsheet
@@ -121,15 +124,12 @@ def upload_data(log_type, delete_last_character=False):
     ID_label.config(fg="black")
     ID_label.config(text="Working...")
     if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
-        if not input_id:
-            ID_label.config(text="")
-            return
         add_simple_warning("Invalid ID")
         return
     try:
         ID_index = ID_list.index(input_id)
     except:
-        ID_list = ID_sheet.col_values(2)
+        ID_list = ID_sheet.col_values(1)
         try:
             ID_index = ID_list.index(input_id)
         except:
@@ -137,7 +137,14 @@ def upload_data(log_type, delete_last_character=False):
             return
         write_to_log("Found ID in Search")
 
-    vital_info = ID_sheet.batch_get([f"C{ID_index+1}:E{ID_index+1}", "I1", "K1"])
+    try:
+        vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "G1", "I1"])
+    except ConnectionError:
+        add_simple_warning("Not Connected to Internet")
+        return
+    except:
+        add_simple_warning("Error @ line 141")
+        return
     cell_value = int(vital_info[1][0][0])
     enough_rows = vital_info[2][0][0]
     person_namestatus = vital_info[0][0]
@@ -172,7 +179,7 @@ def upload_data(log_type, delete_last_character=False):
         ),  # Uses the OpenCV library to make the webcam work on Windows/Mac/Linux
     ).start()
     if log_type == "logoutall" and person_namestatus[2] == "TRUE":
-        logged_in_cells = ID_sheet.findall("login", None, 4)
+        logged_in_cells = ID_sheet.findall("login", None, 3)
         if logged_in_cells == []:
             add_simple_warning("Everyone's already logged out!")
             return
@@ -237,6 +244,7 @@ entry.focus_set()
 entry.bind("/",lambda event: Thread(target=upload_data, args=("login",True)).start())  # fmt: skip
 entry.bind("*",lambda event: Thread(target=upload_data, args=("logout",True)).start())  # fmt: skip
 entry.bind("-",lambda event: Thread(target=upload_data, args=("logoutall",True)).start())  # fmt: skip
+entry.bind("<Return>",lambda event: Thread(target=upload_data, args=("login",False)).start())  # fmt: skip
 entry.pack()
 
 # Buttons for login, logout, and logout all
