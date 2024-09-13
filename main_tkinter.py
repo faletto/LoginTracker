@@ -5,6 +5,7 @@ import datetime
 import socket
 import os
 import time
+import random
 from pathlib import Path
 from threading import Thread
 
@@ -113,8 +114,11 @@ def upload_data(log_type, delete_last_character=False):
     if delete_last_character:
         input_id = input_id[:-1]
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+
     ID_label.config(fg="black")
-    ID_label.config(text="Working...")
+    working_texts = {1: "Working...", 2: "Launching Projectiles...",3: "Gaff Taping the Field...",4: "Tuning PID..."}
+    ID_label.config(text=working_texts.get(random.randint(1, 4)))
+
     if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
         if not input_id:
             ID_label.config(text="")
