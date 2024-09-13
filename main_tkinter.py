@@ -126,7 +126,7 @@ def upload_data(log_type, delete_last_character=False):
             add_simple_warning("Invalid ID")
         return
     ID_label.config(fg="black")
-    ID_label.config(text="Working...")
+    ID_label.config(text="Working... (Your picture is being taken)")
     try:
         ID_index = ID_list.index(input_id)
     except:
