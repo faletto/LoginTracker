@@ -126,7 +126,7 @@ def upload_data(log_type, delete_last_character=False):
         return
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(fg="black")
-    ID_label.config(text="Working...")
+    ID_label.config(text="Working... (Your picture is being taken)")
     try:
         ID_index = ID_list.index(input_id)
     except:
