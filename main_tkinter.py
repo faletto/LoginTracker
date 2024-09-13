@@ -109,7 +109,7 @@ def single_upload(log_type, cell_value, input_id, timestamp):
             "USER_ENTERED",
         )
     except:
-        add_simple_warning("Error @ line 106")
+        add_simple_warning("Error on singleupload")
 
 
 # Function to upload data to the spreadsheet
@@ -121,11 +121,12 @@ def upload_data(log_type, delete_last_character=False):
     if delete_last_character:
         input_id = input_id[:-1]
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
+        if input_id:
+            add_simple_warning("Invalid ID")
+        return
     ID_label.config(fg="black")
     ID_label.config(text="Working...")
-    if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
-        add_simple_warning("Invalid ID")
-        return
     try:
         ID_index = ID_list.index(input_id)
     except:
@@ -143,7 +144,7 @@ def upload_data(log_type, delete_last_character=False):
         add_simple_warning("Not Connected to Internet")
         return
     except:
-        add_simple_warning("Error @ line 141")
+        add_simple_warning("Error batchget")
         return
     cell_value = int(vital_info[1][0][0])
     enough_rows = vital_info[2][0][0]
