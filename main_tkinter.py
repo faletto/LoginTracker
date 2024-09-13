@@ -120,11 +120,11 @@ def upload_data(log_type, delete_last_character=False):
     entry.delete(0, tk.END)
     if delete_last_character:
         input_id = input_id[:-1]
-    upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
         if input_id:
             add_simple_warning("Invalid ID")
         return
+    upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(fg="black")
     ID_label.config(text="Working...")
     try:
@@ -139,7 +139,7 @@ def upload_data(log_type, delete_last_character=False):
         write_to_log("Found ID in Search")
 
     try:
-        vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "G1", "I1"])
+        vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "E2", "E4"])
     except ConnectionError:
         add_simple_warning("Not Connected to Internet")
         return
