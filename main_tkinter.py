@@ -124,12 +124,11 @@ def upload_data(log_type, delete_last_character=False):
         if input_id:
             add_simple_warning("Invalid ID")
         return
-    upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(fg="black")
-    ID_label.config(text="Working... (Your picture is being taken)")
     try:
         ID_index = ID_list.index(input_id)
     except:
+        ID_label.config(text="Looking for your ID...")
         ID_list = ID_sheet.col_values(1)
         try:
             ID_index = ID_list.index(input_id)
@@ -137,6 +136,8 @@ def upload_data(log_type, delete_last_character=False):
             add_simple_warning("ID Not Found!")
             return
         write_to_log("Found ID in Search")
+    upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    ID_label.config(text="Working... (Your picture is being taken)")
 
     try:
         vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "E2", "E4"])
