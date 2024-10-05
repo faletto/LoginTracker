@@ -52,6 +52,18 @@ def add_simple_error(error_type, instructions):
     quit()
 
 
+def refresh_ID_list():
+    global ID_list
+    global ID_list_sum
+    ID_list = ID_sheet.col_values(1)
+    ID_list_sum = 0
+    for s in ID_list:
+        try:
+            ID_list_sum += int(s)
+        except:
+            pass
+
+
 # Initialize the Tkinter window
 window = tk.Tk()
 window.title("NRG Login System")
@@ -97,8 +109,7 @@ except:
 
 worksheet = spreadsheet.worksheet("[BACKEND] Logs")
 ID_sheet = spreadsheet.worksheet("[BACKEND] ID List")
-
-ID_list = ID_sheet.col_values(1)
+refresh_ID_list()
 
 
 def single_upload(log_type, cell_value, input_id, timestamp):
@@ -112,9 +123,25 @@ def single_upload(log_type, cell_value, input_id, timestamp):
         add_simple_warning("Error on singleupload")
 
 
+def batchget(row_number):
+    global vital_info
+    try:
+        vital_info = ID_sheet.batch_get(
+            [f"B{row_number+1}:D{row_number+1}", "E2", "E4", "E6"]
+        )
+    except ConnectionError:
+        add_simple_warning("Not Connected to Internet")
+        return
+    except:
+        add_simple_warning("Error batchget, try again")
+        return
+
+
 # Function to upload data to the spreadsheet
 def upload_data(log_type, delete_last_character=False):
     global ID_list
+    global ID_list_sum
+    global vital_info
     start_time = time.time()
     input_id = entry.get()
     entry.delete(0, tk.END)
@@ -129,7 +156,7 @@ def upload_data(log_type, delete_last_character=False):
         ID_index = ID_list.index(input_id)
     except:
         ID_label.config(text="Looking for your ID...")
-        ID_list = ID_sheet.col_values(1)
+        refresh_ID_list()
         try:
             ID_index = ID_list.index(input_id)
         except:
@@ -139,14 +166,16 @@ def upload_data(log_type, delete_last_character=False):
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working... (Your picture is being taken)")
 
-    try:
-        vital_info = ID_sheet.batch_get([f"B{ID_index+1}:D{ID_index+1}", "E2", "E4"])
-    except ConnectionError:
-        add_simple_warning("Not Connected to Internet")
-        return
-    except:
-        add_simple_warning("Error batchget")
-        return
+    batchget(ID_index)
+
+    # Check to see if the lists align
+    if int(vital_info[3][0][0]) != ID_list_sum:
+        write_to_log("Lineup issue, fixing...")
+        ID_label.config(text="Realigning List...")
+        refresh_ID_list()
+        ID_index = ID_list.index(input_id)
+        batchget(ID_index)
+
     cell_value = int(vital_info[1][0][0])
     enough_rows = vital_info[2][0][0]
     person_namestatus = vital_info[0][0]
@@ -161,18 +190,12 @@ def upload_data(log_type, delete_last_character=False):
                     None,
                     f'=IF(C{cell_value+i}="logout",B{cell_value+i}-INDEX(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}), COUNT(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}))),)',
                 ]
-                for i in range(200)
+                for i in range(1000)
             ],
             "USER_ENTERED",
         )
-        write_to_log("Appended 200 new rows")
+        write_to_log("Appended 1000 new rows")
 
-    # Thread(
-    #    target=os.system,
-    #    args=(
-    #        f"""fswebcam -r 320x240 --no-banner '{usb_drive_path}'/'{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}'.jpeg""",
-    #    ),
-    # ).start()  # https://raspberrypi-guide.github.io/electronics/using-usb-webcams
     Thread(
         target=cv2.imwrite,
         args=(
