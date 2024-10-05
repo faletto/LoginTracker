@@ -8,6 +8,7 @@ import time
 import cv2
 from pathlib import Path
 from threading import Thread
+import logging
 
 usb_drive_name = "LoginLogger"  # TODO - add config file for this
 
@@ -19,7 +20,6 @@ usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
 # If no USB drive (matching usb_drive_name) is plugged in
 if not Path(usb_drive_path).is_dir():
-    print(f"WARNING - No USB Drive Found at {usb_drive_path}")
     # Creates a virtual "drive" at /home/(username)/Desktop/VirtualDrive
     usb_drive_path = (
         os.path.expanduser("~").replace("\\", "/") + "/Desktop/VirtualDrive"
@@ -27,23 +27,29 @@ if not Path(usb_drive_path).is_dir():
     # Ensures virtual drive folder exists
     if not os.path.exists(usb_drive_path):
         os.mkdir(usb_drive_path)
-    print(f"Using {usb_drive_path} instead")
 
+# start logger with info
+logging.basicConfig(
+    filename=f"{usb_drive_path}/tracker.log",
+    encoding="utf-8",
+    filemode="a",
+    format="{asctime}:{levelname}:{name}:{message}",
+    style="{",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
 
-def write_to_log(text):
-    os.system(
-        f"""echo "{datetime.datetime.now()}  {text}" >> "{usb_drive_path}"/logs.txt"""
-    )
+logging.info(f"Using {usb_drive_path} as save folder")
 
 
 def add_simple_warning(warn_type):
-    write_to_log(f"WARNING - {warn_type}, skipping...")
+    logging.warning(f"{warn_type}, skipping...")
     ID_label.config(fg="orange")
     ID_label.config(text=warn_type)
 
 
 def add_simple_error(error_type, instructions):
-    write_to_log(f"ERROR - {error_type}")
+    logging.error(error_type)
     ID_label = ttk.Label(
         window, text=f"{instructions}, close this window, and try again."
     )
@@ -85,7 +91,7 @@ url_file_path = f"{cwd}/spreadsheet_url.txt"
 try:
     with open(url_file_path) as f:
         spreadsheet_url = f.readline()
-    write_to_log(f"Opening spreadsheet: {spreadsheet_url}")
+    logging.info(f"Opening spreadsheet: {spreadsheet_url}")
     spreadsheet = gc.open_by_url(spreadsheet_url)
 except FileNotFoundError:
     with open(url_file_path, "w") as f:
@@ -162,7 +168,7 @@ def upload_data(log_type, delete_last_character=False):
         except:
             add_simple_warning("ID Not Found!")
             return
-        write_to_log("Found ID in Search")
+        logging.info("Found ID in Search")
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working... (Your picture is being taken)")
 
@@ -170,7 +176,7 @@ def upload_data(log_type, delete_last_character=False):
 
     # Check to see if the lists align
     if int(vital_info[3][0][0]) != ID_list_sum:
-        write_to_log("Lineup issue, fixing...")
+        logging.info("Lineup issue, fixing...")
         ID_label.config(text="Realigning List...")
         refresh_ID_list()
         ID_index = ID_list.index(input_id)
@@ -180,7 +186,7 @@ def upload_data(log_type, delete_last_character=False):
     enough_rows = vital_info[2][0][0]
     person_namestatus = vital_info[0][0]
     if person_namestatus[1] == log_type:
-        add_simple_warning("Already Done")
+        add_simple_warning(f"{person_namestatus[0]} {log_type} already done")
         return
     elif enough_rows == "FALSE":
         worksheet.append_rows(
@@ -194,7 +200,7 @@ def upload_data(log_type, delete_last_character=False):
             ],
             "USER_ENTERED",
         )
-        write_to_log("Appended 1000 new rows")
+        logging.info("Appended 1000 new rows")
 
     Thread(
         target=cv2.imwrite,
@@ -233,7 +239,7 @@ def upload_data(log_type, delete_last_character=False):
                 "USER_ENTERED",
             )
             ID_label.config(text=f"Goodnight, {person_namestatus[0]}!")
-            write_to_log(f"Logged out {len(logged_in_IDs_flat)} users")
+            logging.info(f"Logged out {len(logged_in_IDs_flat)} users")
     elif log_type == "logoutall":
         add_simple_warning(f"{person_namestatus[0]} can't log everyone out.")
         return
@@ -241,7 +247,7 @@ def upload_data(log_type, delete_last_character=False):
         single_upload(log_type, cell_value, input_id, upload_timestamp)
         ID_label.config(text=f"{log_type} {person_namestatus[0]}")
     ID_label.config(fg="green")
-    write_to_log(
+    logging.info(
         f"{log_type} by {person_namestatus[0]} took {time.time() - start_time} seconds"
     )
 
@@ -253,7 +259,7 @@ try:
     image_label = ttk.Label(window, image=image)
     image_label.pack()
 except:
-    write_to_log("WARNING - No Logo Image Found")
+    logging.warning("No Logo Image Found")
 
 window.attributes("-fullscreen", True)
 window.focus_force()
@@ -301,7 +307,7 @@ ID_label = tk.Label(window, font=("Helvetica", 32))
 ID_label.pack()
 
 # Start the Tkinter main loop
-write_to_log(
+logging.info(
     f"Initialzation completed in {time.time() - start_time} seconds, launching GUI..."
 )
 window.mainloop()
