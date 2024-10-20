@@ -3,3 +3,5 @@ spreadsheet_url.txt
 logs.txt
 .venv
 static/last_login.jpeg
+/photos
+*.log

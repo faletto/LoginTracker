@@ -10,27 +10,17 @@ from pathlib import Path
 from threading import Thread
 import logging
 
-usb_drive_name = "LoginLogger"  # TODO - add config file for this
-
 start_time = time.time()
 
 # CWD - current working directory, with backslashes replaced by forward slashes
 cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
-usb_drive_path = f"/media/{os.getlogin()}/{usb_drive_name}"
 
-# If no USB drive (matching usb_drive_name) is plugged in
-if not Path(usb_drive_path).is_dir():
-    # Creates a virtual "drive" at /home/(username)/Desktop/VirtualDrive
-    usb_drive_path = (
-        os.path.expanduser("~").replace("\\", "/") + "/Desktop/VirtualDrive"
-    )
-    # Ensures virtual drive folder exists
-    if not os.path.exists(usb_drive_path):
-        os.mkdir(usb_drive_path)
+if not os.path.exists(f"{cwd}/photos"):
+    os.mkdir(f"{cwd}/photos")
 
 # start logger with info
 logging.basicConfig(
-    filename=f"{usb_drive_path}/tracker.log",
+    filename=f"tracker.log",
     encoding="utf-8",
     filemode="a",
     format="{asctime}:{levelname}:{name}:{message}",
@@ -38,8 +28,6 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO,
 )
-
-logging.info(f"Using {usb_drive_path} as save folder")
 
 
 def add_simple_warning(warn_type):
@@ -61,6 +49,7 @@ def add_simple_error(error_type, instructions):
 def refresh_ID_list():
     global ID_list
     global ID_list_sum
+    logging.info("Refreshing ID List...")
     ID_list = ID_sheet.col_values(1)
     ID_list_sum = 0
     for s in ID_list:
@@ -135,10 +124,8 @@ def batchget(row_number):
         vital_info = ID_sheet.batch_get(
             [f"B{row_number+1}:D{row_number+1}", "E2", "E4", "E6"]
         )
-    except ConnectionError:
-        add_simple_warning("Not Connected to Internet")
-        return
     except:
+        logging.exception(f"Error during batchget({row_number})")
         add_simple_warning("Error batchget, try again")
         return
 
@@ -192,9 +179,7 @@ def upload_data(log_type, delete_last_character=False):
         worksheet.append_rows(
             [
                 [
-                    None,
-                    None,
-                    f'=IF(C{cell_value+i}="logout",B{cell_value+i}-INDEX(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}), COUNT(FILTER(B$1:B{cell_value+i-1}, C$1:C{cell_value+i-1}="login", A$1:A{cell_value+i-1}=A{cell_value+i}))),)',
+                    "",
                 ]
                 for i in range(1000)
             ],
@@ -205,7 +190,7 @@ def upload_data(log_type, delete_last_character=False):
     Thread(
         target=cv2.imwrite,
         args=(
-            f"""{usb_drive_path}/{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}.jpeg""",
+            f"""{cwd}/photos/{person_namestatus[0]}-{datetime.datetime.now().strftime("%Y-%m-%d %H%M%S")}-{log_type}.jpeg""",
             cv2.VideoCapture(0).read()[1],
         ),  # Uses the OpenCV library to make the webcam work on Windows/Mac/Linux
     ).start()
