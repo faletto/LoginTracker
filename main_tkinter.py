@@ -115,7 +115,10 @@ def single_upload(log_type, cell_value, input_id, timestamp):
             "USER_ENTERED",
         )
     except:
+        logging.exception(f"Error during singleupload({cell_value})")
         add_simple_warning("Error on singleupload")
+        return True
+    return False
 
 
 def batchget(row_number):
@@ -127,7 +130,8 @@ def batchget(row_number):
     except:
         logging.exception(f"Error during batchget({row_number})")
         add_simple_warning("Error batchget, try again")
-        return
+        return True
+    return False
 
 
 # Function to upload data to the spreadsheet
@@ -138,6 +142,7 @@ def upload_data(log_type, delete_last_character=False):
     start_time = time.time()
     input_id = entry.get()
     entry.delete(0, tk.END)
+    logging.info(f"Attempting {log_type}...")
     if delete_last_character:
         input_id = input_id[:-1]
     if not input_id.isnumeric() or not 100000 <= int(input_id) <= 99999999:
@@ -159,7 +164,8 @@ def upload_data(log_type, delete_last_character=False):
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working... (Your picture is being taken)")
 
-    batchget(ID_index)
+    if batchget(ID_index):
+        return
 
     # Check to see if the lists align
     if int(vital_info[3][0][0]) != ID_list_sum:
@@ -167,7 +173,8 @@ def upload_data(log_type, delete_last_character=False):
         ID_label.config(text="Realigning List...")
         refresh_ID_list()
         ID_index = ID_list.index(input_id)
-        batchget(ID_index)
+        if batchget(ID_index):
+            return
 
     cell_value = int(vital_info[1][0][0])
     enough_rows = vital_info[2][0][0]
@@ -206,7 +213,8 @@ def upload_data(log_type, delete_last_character=False):
             logged_in_IDs_flat = [
                 [int(inner_list[0][0])] for inner_list in logged_in_IDs_nested
             ]
-            single_upload("logoutall", cell_value, input_id, upload_timestamp)
+            if single_upload("logoutall", cell_value, input_id, upload_timestamp):
+                return
             cell_value += 1
             worksheet.update(
                 logged_in_IDs_flat,
@@ -229,7 +237,8 @@ def upload_data(log_type, delete_last_character=False):
         add_simple_warning(f"{person_namestatus[0]} can't log everyone out.")
         return
     else:
-        single_upload(log_type, cell_value, input_id, upload_timestamp)
+        if single_upload(log_type, cell_value, input_id, upload_timestamp):
+            return
         ID_label.config(text=f"{log_type} {person_namestatus[0]}")
     ID_label.config(fg="green")
     logging.info(
