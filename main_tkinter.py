@@ -30,12 +30,14 @@ logging.basicConfig(
 )
 
 
+# warnings quit the login/out sequence if applicable but otherwise allow continuation
 def add_simple_warning(warn_type):
     logging.warning(f"{warn_type}, skipping...")
     ID_label.config(fg="orange")
     ID_label.config(text=warn_type)
 
 
+# errors kill the program
 def add_simple_error(error_type, instructions):
     logging.error(error_type)
     ID_label = ttk.Label(
@@ -76,6 +78,7 @@ try:
 except:
     add_simple_error("No internet", "No internet. Please connect to internet")
 
+# open the spreadsheet url and account for a whole bunch of different possible errors
 url_file_path = f"{cwd}/spreadsheet_url.txt"
 try:
     with open(url_file_path) as f:
@@ -122,7 +125,6 @@ def single_upload(log_type, cell_value, input_id, timestamp):
 
 
 def batchget(row_number):
-    global vital_info
     try:
         vital_info = ID_sheet.batch_get(
             [f"B{row_number+1}:D{row_number+1}", "E2", "E4", "E6"]
@@ -130,15 +132,14 @@ def batchget(row_number):
     except:
         logging.exception(f"Error during batchget({row_number})")
         add_simple_warning("Error batchget, try again")
-        return True
-    return False
+        return 1
+    return vital_info
 
 
 # Function to upload data to the spreadsheet
 def upload_data(log_type, delete_last_character=False):
     global ID_list
     global ID_list_sum
-    global vital_info
     start_time = time.time()
     input_id = entry.get()
     entry.delete(0, tk.END)
@@ -164,7 +165,8 @@ def upload_data(log_type, delete_last_character=False):
     upload_timestamp = datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     ID_label.config(text="Working... (Your picture is being taken)")
 
-    if batchget(ID_index):
+    vital_info = batchget(ID_index)
+    if vital_info == 1:
         return
 
     # Check to see if the lists align
@@ -173,7 +175,8 @@ def upload_data(log_type, delete_last_character=False):
         ID_label.config(text="Realigning List...")
         refresh_ID_list()
         ID_index = ID_list.index(input_id)
-        if batchget(ID_index):
+        vital_info = batchget(ID_index)
+        if vital_info == 1:
             return
 
     cell_value = int(vital_info[1][0][0])
