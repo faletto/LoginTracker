@@ -11,3 +11,8 @@ Small portions of the Python were done by ChatGPT. I (@TaigaM123) am not sure ho
 
 ## Advanced
 **Time Machine** is a feature that allows administrators to choose a custom timestamp to login/logout. It is disabled by default. To enable it, create a file called "time-machine" in the root directory of the project.
+
+### Windows
+`C:\path\to\LoginTracker> echo "" > time-machine`
+### Not Windows
+`/path/to/LoginTracker $ touch time-machine`
