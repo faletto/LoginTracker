@@ -15,4 +15,4 @@ Small portions of the Python were done by ChatGPT. I (@TaigaM123) am not sure ho
 ### Windows
 `C:\path\to\LoginTracker> echo "" > time-machine`
 ### Not Windows
-`/path/to/LoginTracker $ touch time-machine`
+`/path/to/LoginTracker> touch time-machine`
