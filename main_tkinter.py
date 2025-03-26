@@ -6,14 +6,18 @@ import socket
 import os
 import time
 import cv2
-from pathlib import Path
 from threading import Thread
 import logging
 
 start_time = time.time()
 
+VERSION = "1.2.0"
+HOSTNAME = socket.gethostname()
+
 # CWD - current working directory, with backslashes replaced by forward slashes
 cwd = os.path.dirname(os.path.realpath(__file__)).replace("\\", "/")
+
+tm_on = os.path.exists(f"{cwd}/time-machine")
 
 if not os.path.exists(f"{cwd}/photos"):
     os.mkdir(f"{cwd}/photos")
@@ -29,7 +33,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
-tm_on = os.path.exists(f"{cwd}/time-machine")
 
 # warnings quit the login/out sequence if applicable but otherwise allow continuation
 def add_simple_warning(warn_type):
@@ -114,8 +117,8 @@ refresh_ID_list()
 def single_upload(log_type, cell_value, input_id, timestamp):
     try:
         worksheet.update(
-            [[input_id, timestamp, log_type]],
-            f"A{cell_value}:C{cell_value}",
+            [[input_id, timestamp, log_type, f"{HOSTNAME} {VERSION}"]],
+            f"A{cell_value}:D{cell_value}",
             "USER_ENTERED",
         )
     except:
@@ -163,8 +166,8 @@ def upload_data(log_type, delete_last_character=False):
             add_simple_warning("ID Not Found!")
             return
         logging.info("Found ID in Search")
-    
-    ID_label.config(text="Working... (Your picture is being taken)")
+
+    ID_label.config(text="Taking Pictures...")
 
     vital_info = batchget(ID_index)
     if vital_info == 1:
@@ -195,7 +198,7 @@ def upload_data(log_type, delete_last_character=False):
                 day.get(),
                 hour.get(),
                 minute.get(),
-                ap.get()
+                ap.get(),
             )
             if upload_timestamp == "invalid date :P":
                 add_simple_warning("Timestamp is invalid.")
@@ -323,7 +326,7 @@ button_logout_all = ttk.Button(
 )
 
 # Temporary feature to test time machine
-#button_test_tm = ttk.Button(
+# button_test_tm = ttk.Button(
 #    window,
 #    text="Test time machine",
 #    width=25,
@@ -335,7 +338,7 @@ button_logout_all = ttk.Button(
 #                minute.get(),
 #                ap.get()
 #            )),)).start()
-#)
+# )
 
 button_login.pack()
 button_logout.pack()
@@ -348,10 +351,11 @@ checkbox_tm_toggle = ttk.Checkbutton(
     text="Time Machine",
     width=11.75,
     command=lambda: Thread(target=show_tm).start(),
-    variable=tm_shown
+    variable=tm_shown,
 )
 
-if tm_on: checkbox_tm_toggle.pack()
+if tm_on:
+    checkbox_tm_toggle.pack()
 
 frame_tm = ttk.Frame(
     window,
@@ -361,69 +365,43 @@ frame_tm = ttk.Frame(
 
 month_list = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 month = tk.StringVar(value=datetime.datetime.now().strftime("%B"))
-tm_month = ttk.Spinbox(
-    frame_tm,
-    values=month_list,
-    wrap=True,
-    textvariable=month
-)
+tm_month = ttk.Spinbox(frame_tm, values=month_list, wrap=True, textvariable=month)
 tm_month.pack(side="left")
-
 
 
 day = tk.IntVar(value=datetime.datetime.now().day)
 tm_day = ttk.Spinbox(
     frame_tm,
-    from_ = 1,
-    to=31, #calendar.monthrange(year.get(), month_list.index(month.get()) + 1)[1] was trying to get this to update dynamically but no dice
+    from_=1,
+    to=31,  # calendar.monthrange(year.get(), month_list.index(month.get()) + 1)[1] was trying to get this to update dynamically but no dice
     wrap=True,
-    textvariable=day
+    textvariable=day,
 )
 tm_day.pack(side="left")
 
 year = tk.IntVar(value=datetime.datetime.now().year)
 tm_year = ttk.Spinbox(
-    frame_tm,
-    from_=2000,
-    to=2100,
-    increment=1,
-    wrap=True,
-    textvariable=year
+    frame_tm, from_=2000, to=2100, increment=1, wrap=True, textvariable=year
 )
 tm_year.pack(side="left")
 
 
 hour = tk.IntVar(value=int(datetime.datetime.now().strftime("%I")))
-tm_hour = ttk.Spinbox(
-    frame_tm,
-    from_=1,
-    to=12,
-    wrap=True,
-    textvariable=hour
-)
-tm_hour.pack(side="left",padx=(15,0))
+tm_hour = ttk.Spinbox(frame_tm, from_=1, to=12, wrap=True, textvariable=hour)
+tm_hour.pack(side="left", padx=(15, 0))
 
-minute_values = [("0" + str(i)) for i in range(10)] + [str(i) for i in range(10,60)]
+minute_values = [("0" + str(i)) for i in range(10)] + [str(i) for i in range(10, 60)]
 minute = tk.StringVar(value=datetime.datetime.now().strftime("%M"))
 tm_minute = ttk.Spinbox(
-    frame_tm,
-    from_=0,
-    to=59,
-    wrap=True,
-    values=minute_values,
-    textvariable=minute
+    frame_tm, from_=0, to=59, wrap=True, values=minute_values, textvariable=minute
 )
 tm_minute.pack(side="left")
 
-ap_list = ["AM","PM"]
+ap_list = ["AM", "PM"]
 ap = tk.StringVar(value=datetime.datetime.now().strftime("%p"))
-tm_ap = ttk.Spinbox(
-    frame_tm,
-    values=ap_list,
-    wrap=True,
-    textvariable=ap
-)
+tm_ap = ttk.Spinbox(frame_tm, values=ap_list, wrap=True, textvariable=ap)
 tm_ap.pack(side="left")
+
 
 def show_tm():
     if tm_shown.get():
@@ -431,9 +409,10 @@ def show_tm():
     else:
         frame_tm.pack_forget()
 
+
 # Re-formats time format into %m/%d/%Y, %H:%M:%S
 # Seconds are hard-coded as 00 (not an option in time machine)
-def parse_timestamp(_year,_month,_day,_hour,_minute,_ap):
+def parse_timestamp(_year, _month, _day, _hour, _minute, _ap):
     # Validate date
     try:
         datetime.datetime(_year, _month, _day)
@@ -458,9 +437,10 @@ def parse_timestamp(_year,_month,_day,_hour,_minute,_ap):
         if _ap == "PM":
             _hour += 12
         hour = str(_hour) if _hour >= 10 else "0" + str(_hour)
-    
+
     # Return formatted string
     return f"{month}/{day}/{_year}, {hour}:{_minute}:00"
+
 
 # Label for displaying messages
 ID_label = tk.Label(window, font=("Helvetica", 32))
@@ -468,6 +448,6 @@ ID_label.pack()
 
 # Start the Tkinter main loop
 logging.info(
-    f"Initialzation completed in {time.time() - start_time} seconds, launching GUI..."
+    f"Startup of {VERSION} on {HOSTNAME} done in {time.time() - start_time} seconds, launching GUI..."
 )
 window.mainloop()
